@@ -1,3 +1,4 @@
+# ami which is amazon linux 2023 , hvm type, x64
 data "aws_ami" "amazon_linux" {
     most_recent = true
 

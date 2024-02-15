@@ -1,3 +1,4 @@
+#remarks added as variables descriptions
 variable "project_name" {
     type = string
     default = "proj2024"
