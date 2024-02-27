@@ -296,19 +296,7 @@ resource "aws_instance" "ec2_public" {
     vpc_security_group_ids = [aws_security_group.public_security_group.id]
     key_name               = "${var.private_key_name}"
     iam_instance_profile   = aws_iam_instance_profile.ec2_storage_full_access.name
-    user_data              = <<-EOF
-                                #!/bin/bash
-                                dnf update -y
-                                sudo dnf install -y amazon-efs-utils python3-pip
-                                pip3 install botocore ec2instanceconnectcli
-                                sudo pip3 install botocore ec2instanceconnectcli
-                                pwd > /tmp/user_data.log
-                                ls -lha >> /tmp/user_data.log
-                                echo "mssh -r ${var.region} ${aws_instance.ec2_private.id}" > priv.sh
-                                sudo chmod +x ./priv.sh
-                                EOF
-
-    depends_on             = [ aws_iam_role.ec2_storage_role ]
+    depends_on             = [ aws_iam_role.ec2_storage_role, aws_instance.ec2_private ]
 
     tags = {
       Name = "${var.project_name}-ec2_public"
@@ -327,20 +315,33 @@ resource "aws_instance" "ec2_private" {
     user_data              = <<-EOF
                                 #!/bin/bash
                                 dnf update -y
-                                sudo mkdir /efs/
+                                CURRENT_DATE=$(date "+%d-%m-%Y-%H-%M")
+                                export BUCKET_NAME="${aws_s3_bucket.s3_bucket.bucket}"
+                                export OBJECT_KEY='files'
+                                export EFS_DIR=/efs
+                                export EFS_FILE=efs.test
+                                export LOG_DIR=/tmp
+                                export LOG_FILE=efs.log
+                                sudo mkdir $EFS_DIR/
                                 sudo dnf install -y amazon-efs-utils python3-pip
-                                sudo pip3 install botocore
-                                pip3 install botocore
-                                echo '${aws_efs_file_system.efs.id}:/ /efs efs defaults,_netdev,nofail 0 0' >> /etc/fstab
+                                sudo pip3 install botocore cryptography
+                                pip3 install botocore cryptography
+                                echo '${aws_efs_file_system.efs.id}:/ $EFS_DIR efs defaults,_netdev,nofail 0 0' >> /etc/fstab
                                 mount -a
-                                sudo touch /efs/efs.test
-                                ls -lha /efs/ > /tmp/efs.log
+                                sudo echo $CURRENT_DATE > $EFS_DIR/$EFS_FILE
+                                ls -lha $EFS_DIR/ > $LOG_DIR/$LOG_FILE
+                                aws s3 cp $EFS_DIR/$EFS_FILE s3://$BUCKET_NAME/$OBJECT_KEY/$EFS_FILE 
+                                aws s3 cp $LOG_DIR/$LOG_FILE s3://$BUCKET_NAME/$OBJECT_KEY/$LOG_FILE
+                                echo "aws s3 cp $EFS_DIR/$EFS_FILE s3://$BUCKET_NAME/$OBJECT_KEY/$EFS_FILE" >> /tmp/test.log
+                                echo "aws s3 cp $LOG_DIR/$LOG_FILE s3://$BUCKET_NAME/$OBJECT_KEY/$LOG_FILE" >> /tmp/test.log
                                 EOF
-    depends_on             = [ aws_iam_role.ec2_storage_role ]
-    tags                   = {
-                              Name = "${var.project_name}-ec2_private"
-    }
+    depends_on              = [ aws_iam_role.ec2_storage_role ]
+        tags                = {
+                                Name = "${var.project_name}-ec2_private"
+        }
 }
+
+
 
 
 # storage
@@ -379,4 +380,12 @@ resource "random_string" "random_str" {
 
 resource "aws_s3_bucket" "s3_bucket" {
     bucket = "${var.project_name}-${random_string.random_str.result}"
+    force_destroy = true
 }
+
+# resource "aws_s3_bucket_object" "upload_script" {
+#   bucket = aws_s3_bucket.s3_bucket.bucket
+#   key    = "upload.sh"  # This is the path/key where the file will be stored in the bucket
+#   source = "${path.module}/files/upload.sh"  # Path to the local file you want to upload
+#   acl    = "private"
+# }
