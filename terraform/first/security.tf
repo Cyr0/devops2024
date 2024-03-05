@@ -62,7 +62,66 @@ resource "aws_security_group" "private_security_group" {
 #=====================================================================
 # IAM
 #=====================================================================
+# eks IAM Role, Policies : AmazonEKSClusterPolicy, AmazonEKSVPCResourceControlle
+resource "aws_iam_role" "eks_cluster_role" {
+  name = "${var.project_name}-eksclusterrole"
+  
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+        {
+            Action = "sts:AssumeRole"
+            Effect = "Allow"
+            Principal = {
+                Service = "eks.amazonaws.com"
+            }
+        },  
+    ]
+  })
+}
 
+resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
+  role = aws_iam_role.eks_cluster_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "eks_vpc_resource_controller" {
+  role = aws_iam_role.eks_cluster_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+}
+
+# IAM role, Policies attachments for eks worker
+# Policies : AmazonEKSWorkerNodePolicy, AmazonEKS_CNI_Policy, AmazonEC2ContainerRegistryReadOnly
+resource "aws_iam_role" "eks_worker_role" {
+  name = "eksWorkerRole"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+        {
+            Action = "sts:AssumeRole"
+            Effect = "Allow"
+            Principal = {
+                Service = "ec2.amazonaws.com"
+            }
+        },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "eks_worker_policy" {
+    role       = aws_iam_role.eks_worker_role.name
+    policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
+    role       = aws_iam_role.eks_worker_role.name
+    policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+}
+
+resource "aws_iam_role_policy_attachment" "eks_ec2_policy" {
+    role       = aws_iam_role.eks_worker_role.name
+    policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
 
 #================================================================
 # SSH Keys
@@ -97,12 +156,12 @@ resource "local_file" "ssh_openssh_public_key" {
 }
 
 # convert pem2ppk for putty use.
-resource "null_resource" "pem2ppk" {
-  provisioner "local-exec" {
-    command = "./test.sh && puttygen ${var.project_name}.pem -o ${var.project_name}.ppk"
-  }
-  depends_on = [
-    local_file.ssh_openssh_private_key
-  ]
+# resource "null_resource" "pem2ppk" {
+#   provisioner "local-exec" {
+#     command = "./test.sh && puttygen ${var.project_name}.pem -o ${var.project_name}.ppk"
+#   }
+#   depends_on = [
+#     local_file.ssh_openssh_private_key
+#   ]
 
-}
+# }

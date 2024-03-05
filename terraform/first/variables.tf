@@ -1,7 +1,7 @@
 #remarks added as variables descriptions
 variable "project_name" {
     type = string
-    default = "proj2024"
+    default = "projeks2024"
     description = "Project Name"
 }
 
@@ -31,15 +31,27 @@ variable "vpc_cidr_block" {
 
 variable "public_subnet_cidr_block" {
     type = string
-    default = "10.12.0.0/17"
+    default = "10.12.0.0/18"
     description = "public subnet cidr block"  
 }
 
-variable "private_subnet_cidr_block" {
+variable "eks_subnet1_cidr_block" {
     type = string
-    default = "10.12.128.0/17"
-    description = "private subnet cidr block"  
+    default = "10.12.64.0/18"
+    description = "eks subnet1 cidr block"  
 }
+variable "eks_subnet2_cidr_block" {
+    type = string
+    default = "10.12.128.0/18"
+    description = "eks subnet2 cidr block"  
+}
+
+variable "leftover_subnet_cidr_block" {
+    type = string
+    default = "10.12.192.0/18"
+    description = "leftover subnet cidr block"  
+}
+
 
 variable "internet_cidr_block" {
     type = string
@@ -81,4 +93,38 @@ variable "no_protocol_port" {
     type = number
     default = 0
     description = "no protocol port"
+}
+
+variable "jenkins_helm_repo" {
+    type = string
+    default = "https://charts.jenkins.io"
+    description = "jenkins helm repo"
+  
+}
+
+variable "jenkins_helm_repo_name" {
+    type = string
+    default = "jenkins"
+    description = "jenkins helm repo name"
+  
+}
+
+variable "jenkins_helm_chart" {
+    type = string
+    default = "jenkins"
+    description = "jenkins helm chart name"
+  
+}
+
+variable "jenkins_namespace" {
+    type = string
+    default = "jenkins"
+    description = "jenkins name space"
+  
+}
+
+variable "jenkins_version" {
+    type = string
+    default = "5.0.17"
+    description = "jenkins chart version"
 }
