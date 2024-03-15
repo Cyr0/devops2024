@@ -33,6 +33,18 @@ resource "aws_subnet" "subnet_public" {
     }
     depends_on = [aws_route_table.public_route_table]
 }
+#########################################
+resource "aws_subnet" "subnet_private" {
+    vpc_id = aws_vpc.project_vpc.id
+    cidr_block = "${var.private_subnet_cidr_block}"
+
+    map_public_ip_on_launch = true
+
+    tags = {
+      Name = "${var.project_name}-public-subnet"
+    }
+    depends_on = [aws_route_table.public_route_table]
+}
  #########################################
  # route table creation for public-subnet
  # public-route-table =
@@ -64,29 +76,3 @@ resource "aws_subnet" "subnet_public" {
         subnet_id = aws_subnet.subnet_public.id
         route_table_id = aws_route_table.public_route_table.id
     }
-###################################################    
-# subnet-private = 10.12.64.0/18  // 10.12.128.0/18
-###################################################
-# default route table
-
-resource "aws_subnet" "eks_subnets" {
-    count = 2
-    vpc_id = aws_vpc.project_vpc.id
-    cidr_block = count.index == 0 ? "${var.eks_subnet1_cidr_block}" : "${var.eks_subnet2_cidr_block}"
-    availability_zone = count.index == 0 ? "eu-west-1a" : "eu-west-1b"
-    map_public_ip_on_launch = true
-    tags = {
-      Name = "${var.project_name}-eks-subnet-${count.index}"
-    }
-    depends_on = [aws_route_table.public_route_table]    
-}
-
-##################################################### 
-    # associate public-route-table to public-subnet
-#####################################################    
-    resource "aws_route_table_association" "eks_public_route_table_association" {
-        count = 2
-        subnet_id = aws_subnet.eks_subnets[count.index].id
-        route_table_id = aws_route_table.public_route_table.id
-    }
-
