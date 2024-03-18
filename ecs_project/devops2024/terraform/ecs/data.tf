@@ -60,14 +60,14 @@ data "aws_subnets" "data_subnets" {
 }
 
 # #Get workload ALB
-# data "aws_lb" "alb" {
-#   #provider = aws.workload
-#   name     = var.workload_alb_name
-# }
+data "aws_lb" "alb" {
+  #provider = aws.workload
+  name     = var.workload_alb_name
+}
 
 #Get workload ALB HTTPS Listener
-# data "aws_lb_listener" "alb_listener" {
-#   #provider = aws.workload
-#   load_balancer_arn = data.aws_lb.alb.arn
-#   port              = 443
-# }
+data "aws_lb_listener" "alb_listener" {
+  #provider = aws.workload
+  load_balancer_arn = data.aws_lb.alb.arn
+  port              = 443
+}

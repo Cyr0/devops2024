@@ -7,8 +7,9 @@
             ],
             "Effect": "Allow",
             "Resource": [
-                "#{secret_manager_arn}#",
-                "#{kms_arn}#"
+                
+                "*",
+                "*"
             ]
         }
     ],

@@ -174,3 +174,15 @@ variable "no_protocol_port" {
     description = "no protocol port"
 }
 
+variable "workload_domains" {
+  type = set(string)
+  description = "Workload domains"
+  default = []
+}
+
+variable "workload_alb_name" {
+  type = string
+  description = "ALB name"
+  default = ""
+}
+

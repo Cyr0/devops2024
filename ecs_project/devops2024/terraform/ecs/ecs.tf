@@ -13,7 +13,9 @@ module "create_ecs" {
   vpc_id                = aws_vpc.project_vpc.id
 
   //workload_subnets_ids  = data.aws_subnets.app_subnets.ids
-  workload_subnets_ids = ["subnet-0223280f18177439b", "subnet-0e98cadc34522a8f5"]
+  #workload_subnets_ids = ["subnet-0223280f18177439b", "subnet-0e98cadc34522a8f5"]
+  workload_subnets_ids = ["${aws_subnet.subnet_public.id}", "${aws_subnet.subnet_private.id}"]
+
 
   cw_logs_retention_in_days = var.cw_logs_retention_in_days
 
@@ -90,24 +92,24 @@ module "create_ecs" {
   security_group_ids = [aws_security_group.outbound-all_security_group.id]
 }
 
-# module "ecs_alb_listener_rule" {
-#   source   = "./modules/alb_listener_rule"
-#   for_each = module.create_ecs
-#   providers = {
-#     aws = aws.workload
-#   }
-#   alb_listener_arn = data.aws_lb_listener.alb_listener.arn
-#   target_group_arn = each.value.ecs_target_group_arn
+module "ecs_alb_listener_rule" {
+  source   = "./modules/alb_listener_rule"
+  for_each = module.create_ecs
+  providers = {
+    aws = aws.workload
+  }
+  alb_listener_arn = data.aws_lb_listener.alb_listener.arn
+  target_group_arn = each.value.ecs_target_group_arn
 
-#   alb_listener_rule_conditions = [{
-#     field  = "host_header",
-#     values = tolist(var.workload_domains)
-#     },
-#     {
-#       field  = "path_pattern",
-#       values = ["/*"]
-#   }] #TODO:CHANGE
-# }
+  alb_listener_rule_conditions = [{
+    field  = "host_header",
+    values = tolist(var.workload_domains)
+    },
+    {
+      field  = "path_pattern",
+      values = ["/*"]
+  }] #TODO:CHANGE
+}
 
 # #Create Lambda
 # module "create_lambda" {
