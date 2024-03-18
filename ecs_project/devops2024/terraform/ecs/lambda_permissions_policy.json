@@ -1,0 +1,16 @@
+{
+    "Statement": [
+        {
+            "Action": [
+                "secretsmanager:GetSecretValue",
+                "kms:Decrypt"
+            ],
+            "Effect": "Allow",
+            "Resource": [
+                "#{secret_manager_arn}#",
+                "#{kms_arn}#"
+            ]
+        }
+    ],
+    "Version": "2012-10-17"
+}
